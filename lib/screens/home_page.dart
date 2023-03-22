@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:fruity/classes/fruit.dart';
+import 'package:fruity/widgets/cart_screen.dart';
 import 'package:fruity/widgets/fruit_preview.dart';
 import 'package:fruity/screens/details_page.dart';
 
@@ -79,6 +80,8 @@ class FruitsMaster extends StatefulWidget {
 }
 
 class _FruitsMasterState extends State<FruitsMaster> {
+  int _selectedIndex = 0;
+  final PageController _pageController = PageController();
   late List<Fruit> _fruits;
   late List<Fruit> _cart;
   late double _sum;
@@ -89,6 +92,15 @@ class _FruitsMasterState extends State<FruitsMaster> {
     _fruits = widget.fruits;
     _cart = [];
     _sum = 0;
+  }
+
+  _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    _pageController.animateToPage(index,
+        duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
   }
 
   void _onFruitTap(fruit) {
@@ -171,24 +183,43 @@ class _FruitsMasterState extends State<FruitsMaster> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Center(child: Text("Panier : ${_sum.toStringAsFixed(2)} €")),
-      ),
-      body: Center(
-        child: ListView.builder(
-            itemCount: _fruits.length,
-            itemBuilder: (context, index) {
-              return FruitPreview(
-                  fruit: _fruits[index],
-                  onTileTap: _onFruitTap,
-                  onAddTap: _addFruit);
-            }),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _createFruit(),
-        tooltip: 'Ajouter un fruit',
-        child: const Icon(Icons.add),
-      ),
-    );
+        appBar: AppBar(
+          title: Center(child: Text("Panier : ${_sum.toStringAsFixed(2)} €")),
+        ),
+        body: PageView(
+          controller: _pageController,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            ListView.builder(
+                itemCount: _fruits.length,
+                itemBuilder: (context, index) {
+                  return FruitPreview(
+                      fruit: _fruits[index],
+                      onTileTap: _onFruitTap,
+                      onAddTap: _addFruit);
+                }),
+            CartScreen(cart: _cart, onRemoveTap: _removeFruit),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => _createFruit(),
+          tooltip: 'Ajouter un fruit',
+          child: const Icon(Icons.add),
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Accueil',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.shopping_cart),
+              label: 'Panier',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.green,
+          onTap: _onItemTapped,
+        ));
   }
 }
