@@ -1,2 +1,3 @@
-# fruity
+## Participants:
+### Christopher JUE
  
