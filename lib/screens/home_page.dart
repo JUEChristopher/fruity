@@ -1,79 +1,13 @@
 import 'dart:math';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:fruity/classes/fruit.dart';
 import 'package:fruity/widgets/cart_screen.dart';
 import 'package:fruity/widgets/fruit_preview.dart';
 import 'package:fruity/screens/details_page.dart';
 
-List<String> fruitsNames = [
-  "Ananas",
-  "Banane",
-  "Cassis",
-  "Citron",
-  "Citron-vert",
-  "Fraise",
-  "Framboise",
-  "Fruit-de-la-passion",
-  "Goyave",
-  "Grenade",
-  "Kaki",
-  "Kiwi",
-  "Litchi",
-  "Mangue",
-  "Melon",
-  "Mure",
-  "Myrtille",
-  "Orange",
-  "Pasteque",
-  "Peche",
-  "Poire",
-  "Pomelo",
-  "Pomme",
-];
-
-List<Color> fruitsColors = [
-  Colors.yellow,
-  Colors.purple,
-  Colors.green,
-  Colors.red,
-  Colors.deepPurple,
-  Colors.lightGreen,
-  Colors.redAccent,
-  Colors.orange,
-  Colors.brown,
-  Colors.greenAccent,
-  Colors.orangeAccent,
-  Colors.pink,
-  Colors.blueAccent,
-];
-
-List<double> fruitsPrices = [
-  0.5,
-  0.6,
-  0.7,
-  0.8,
-  0.9,
-  1.0,
-  1.1,
-  1.2,
-  1.3,
-  1.4,
-  1.5,
-  1.6,
-  1.7,
-  1.8,
-  1.9,
-  2.0,
-  2.1,
-  2.2,
-  2.3,
-  2.4,
-];
-
 class FruitsMaster extends StatefulWidget {
-  const FruitsMaster({super.key, required this.fruits});
-
-  final List<Fruit> fruits;
+  const FruitsMaster({super.key});
 
   @override
   State<FruitsMaster> createState() => _FruitsMasterState();
@@ -82,14 +16,28 @@ class FruitsMaster extends StatefulWidget {
 class _FruitsMasterState extends State<FruitsMaster> {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
-  late List<Fruit> _fruits;
+  final dio = Dio();
+  late Future<List<Fruit>> _fruits;
   late List<Fruit> _cart;
   late double _sum;
+
+  Future<List<Fruit>> getFruits() async {
+    try {
+      final response = await dio.get('https://fruits.shrp.dev/items/fruits');
+      List<Fruit> listFruitsAPI = [];
+      response.data['data']
+          .forEach((fruit) => {listFruitsAPI.add(Fruit.fromJson(fruit))});
+      return listFruitsAPI;
+    } catch (e) {
+      print(e);
+      return [];
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _fruits = widget.fruits;
+    _fruits = getFruits();
     _cart = [];
     _sum = 0;
   }
@@ -169,17 +117,6 @@ class _FruitsMasterState extends State<FruitsMaster> {
     }
   }
 
-  void _createFruit() {
-    setState(() {
-      _fruits.insert(
-          0,
-          Fruit(
-              name: fruitsNames[Random().nextInt(fruitsNames.length)],
-              color: fruitsColors[Random().nextInt(fruitsColors.length)],
-              price: fruitsPrices[Random().nextInt(fruitsPrices.length)]));
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -190,21 +127,26 @@ class _FruitsMasterState extends State<FruitsMaster> {
           controller: _pageController,
           physics: const NeverScrollableScrollPhysics(),
           children: [
-            ListView.builder(
-                itemCount: _fruits.length,
-                itemBuilder: (context, index) {
-                  return FruitPreview(
-                      fruit: _fruits[index],
-                      onTileTap: _onFruitTap,
-                      onAddTap: _addFruit);
+            FutureBuilder(
+                future: _fruits,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done &&
+                      snapshot.hasData) {
+                    return ListView.builder(
+                        itemCount: snapshot.data!.length,
+                        itemBuilder: (context, index) {
+                          return FruitPreview(
+                              fruit: snapshot.data![index],
+                              onTileTap: _onFruitTap,
+                              onAddTap: _addFruit);
+                        });
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text("${snapshot.error}"));
+                  }
+                  return const Center(child: CircularProgressIndicator());
                 }),
             CartScreen(cart: _cart, onRemoveTap: _removeFruit),
           ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => _createFruit(),
-          tooltip: 'Ajouter un fruit',
-          child: const Icon(Icons.add),
         ),
         bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
