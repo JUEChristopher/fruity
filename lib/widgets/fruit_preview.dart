@@ -26,7 +26,7 @@ class FruitPreview extends StatelessWidget {
           shape: BoxShape.circle,
         ),
         child: Image(
-          image: AssetImage("assets/${fruit.name.toLowerCase()}.png"),
+          image: AssetImage("assets/${fruit.image}"),
           width: 38,
           height: 38,
         ),

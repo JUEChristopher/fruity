@@ -29,8 +29,7 @@ class CartScreen extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Image(
-                    image: AssetImage(
-                        "assets/${cart[index].name.toLowerCase()}.png"),
+                    image: AssetImage("assets/${cart[index].image}"),
                     width: 38,
                     height: 38,
                   ),

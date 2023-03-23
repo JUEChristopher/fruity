@@ -23,7 +23,7 @@ class FruitDetailsScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               Image(
-                image: AssetImage("assets/${fruit.name.toLowerCase()}.png"),
+                image: AssetImage("assets/${fruit.image}"),
                 width: 150,
                 height: 150,
               ),
